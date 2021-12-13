@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cities</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</head>
+<body>
+<h1>Cities</h1>
+
+<div id="create-city-modal" class="modal">
+    <div class="modal-content">
+        <input data-id="" id="city-name-input" type="text" placeholder="City name">
+        <select id="country-select" >
+        </select>
+    </div>
+    <div class="modal-footer">
+        <a href="#!" id="city-create-button" class="modal-close waves-effect waves-green btn-flat">Create</a>
+    </div>
+</div>
+
+<button id="request-modal-button" data-target="create-city-modal" class="btn modal-trigger">Create city</button>
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Country</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+
+    <tbody id = "cities">
+    </tbody>
+</table>
+
+<script>
+    $(document).ready(function() {
+        let $modal = $('.modal');
+        let $select = $('select');
+
+        let tableBody = $('#cities');
+        let $countrySelect = $('#country-select');
+
+        let $cityNameInput = $('#city-name-input');
+
+        let countryId;
+
+        $modal.modal({});
+
+        $('#request-modal-button').click(()=>{
+            requestCountries();
+        });
+
+        $('#city-create-button').click( ()=> {
+            let cityRequest = {
+                name: $cityNameInput.val(),
+                countryId: $countrySelect.val()
+            };
+
+            let id = $cityNameInput.attr('data-id');
+
+            if (id){
+                $.ajax({
+                    url: http://localhost:8080/city?id=${id},
+                type: 'put',
+                    contentType: 'application/json',
+                    data: JSON.stringify(cityRequest),
+                    success: function () {
+                    getCity()
+                },
+                error: console.log
+            });
+            }
+            else {
+                $.ajax({
+                    url: 'http://localhost:8080/city',
+                    type: 'post',
+                    contentType: 'application/json',
+                    data: JSON.stringify(cityRequest),
+                    success: function () {
+                        getCity()
+                    },
+                    error: console.log
+                });
+            }
+
+
+            $modal.modal('close');
+            if ($modal.modal('close')){
+                $cityNameInput.val('');
+                $cityNameInput.attr('data-id', '');
+                $countrySelect.val('');
+                countryId = undefined;
+            }
+        });
+
+        let actionOnDeleteButtons = () => {
+            $('.delete-btn').click((e) => {
+                $.ajax({
+                    url: http://localhost:8080/city?id=${$(e.target).attr('data-id')},
+                type: 'delete',
+                    success: () => {
+                    $(e.target.parentElement.parentElement).hide();
+                }
+            });
+            })
+        };
+
+        let actionOnUpdateButtons = ()=>{
+            $('.update-btn').click((e)=>{
+                let $btn = $(e.target);
+                let id = $btn.attr('data-id');
+                $cityNameInput.val($btn.parent().siblings('.city-name').html());
+                $countrySelect.val($btn.parent().siblings('.country-id').html());
+                countryId = $btn.parent().siblings('.country-id').attr('data-id');
+                $cityNameInput.attr('data-id', id);
+                requestCountries();
+                $modal.modal('open');
+            })
+        };
+
+        let getCity = () => {
+            tableBody.html('');
+            $.ajax({
+                url: 'http://localhost:8080/city
+                ',
+                type: 'get',
+                success: function (response) {
+                for (let city of response) {
+                    appendCityToTable(city);
+                }
+                actionOnDeleteButtons();
+                actionOnUpdateButtons();
+            }
+        });
+        };
+
+        let requestCountries = () =>{
+            $.ajax({
+                url: 'http://localhost:8080/country',
+                type: 'get',
+                success: activateSelect,
+                error:console.log()
+            });
+        };
+
+        let appendCountriesToSelect = (countries) => {
+            for (const country of countries) {
+                appendCountryToSelect(country);
+            }
+        };
+
+
+        let activateSelect = (countries) => {
+            $countrySelect.html('');
+            if (countryId === undefined){
+                $countrySelect.append(`<option id="data-country-id" value="" disabled selected>Take country</option>`);
+            }
+            appendCountriesToSelect(countries);
+            $select.formSelect();
+
+        };
+
+        let appendCountryToSelect = (country) => {
+            if (countryId == country.id) {
+                $countrySelect.append(`<option id="data-country-id" value="${country.id}" selected>${country.name}</option>`);
+            }
+            else {
+                $countrySelect.append(`<option id="data-country-id" value="${country.id}">${country.name}</option>`);
+            }
+        };
+
+        let appendCityToTable = (city) => {
+            tableBody.append(`
+            <tr>
+                <td>${city.id}</td>
+                <td class = "city-name">${city.name}</td>
+                <td  class = "country-id" data-id ="${city.countryResponse.id}">${city.countryResponse.name}</td>
+                <td>
+                    <button data-id ="${city.id}" class="delete-btn btn">Delete</button>
+                    <button data-id ="${city.id}" data-country-id="${city.countryResponse.id}" class="update-btn btn">Update</button>
+                </td>
+            </tr>
+        `)
+        };
+
+        getCity();
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Catalog</title>
+</head>
+<body>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Catalog</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+
+    <style>
+        .page-size-sort {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .input-field {
+            width: 100px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+
+        .item {
+            width: 32%;
+        }
+
+        .item img {
+            width: 100%;
+        }
+
+        .head-container{
+            margin-left: 20px;
+            margin-right: 20px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+
+        }
+        .page-size-sort{
+            display: flex;
+            justify-content: space-between;
+        }
+        .sort-input{
+            margin-right: 15px;
+        }
+        .page-controllers {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 50px;
+            margin-bottom: 20px;
+        }
+
+        .page-number {
+            margin: 0 10px;
+            font-size: 20px;
+        }
+
+    </style>
+</head>
+<body>
+<div class="head-container">
+
+<div class="cart-container">
+    <button class="btn-open-cart btn waves-effect waves-light">Корзина</button>
+</div>
+<div class="page-size-sort">
+
+    <div class="sort-input input-field">
+        <select class="sort-by">
+            <option value="price" selected>По ціні</option>
+            <option value="name">По імені</option>
+            <option value="maker">По виробнику</option>
+        </select>
+        <label>Sort by</label>
+    </div>
+
+
+    <div class="input-field">
+        <select class="page-size">
+            <option value="5" selected>5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+        </select>
+        <label>Page size</label>
+    </div>
+
+</div>
+</div>
+<div class="container"></div>
+
+<div class="page-controllers">
+    <button class="btn btn-prev">prev</button>
+    <span class="page-number">1</span>
+    <button class="btn btn-next">next</button>
+</div>
+
+
+
+<script>
+
+    let $pageNumber = $('.page-number');
+    let $pageSize = $('.page-size');
+    let $sortBy = $('.sort-by');
+    let $container = $('.container');
+    let pages = 0;
+
+
+    let appendProduct = (product) => {
+        $container.append(`
+            <div class="item">
+                <h4>${product.maker.name} ${product.name}</h4>
+                <img src="http://localhost:8080/images/product/${product.mainImage}">
+                <p>Ціна: $${product.price}</p>
+                <a href="http://localhost:8080/fullProduct?id=${product.id}" class="description-btn waves-effect waves-teal btn-flat">опис</a>
+                <button value="${product.id}" class="btn-to-cart btn waves-effect waves-light">В кошик</button>
+            </div>
+        `);
+    };
+
+
+
+
+    const addActionOnToCartButtons = () => {
+        $('.btn-to-cart').click((e) => {
+            const cart = JSON.parse(window.localStorage.getItem('cart')) || [];
+            const item = cart.filter(t => e.target.value == t.productId);
+            if (item.length > 0) {
+                item[0].count++;
+            } else {
+                cart.push({
+                    productId: e.target.value,
+                    count: 1
+                });
+            }
+            window.localStorage.setItem('cart', JSON.stringify(cart));
+        });
+    };
+
+
+
+
+    let appendProducts = (products) => {
+        $container.html('');
+        for (const product of products) {
+            appendProduct(product);
+        }
+    };
+    let getDataFromApi = () => {
+        $.ajax({
+            url: `http://localhost:8080/product?page=${$pageNumber.html() - 1}&size=${$pageSize.val()}&field=${$sortBy.val()}&direction=ASC`,
+            type: 'get',
+            success: (res) => {
+                console.log(res);
+                pages = res.totalPages;
+                if (+$pageNumber.html() === pages) {
+                    $('.btn-next').attr('disabled', 'true');
+                } else {
+                    $('.btn-next').removeAttr('disabled');
+                }
+                appendProducts(res.content);
+                addActionOnToCartButtons();
+            }
+        })
+    };
+    $(document).ready(function () {
+
+
+
+
+
+
+
+        $('select').formSelect();
+        getDataFromApi();
+        $('.btn-next').click(() => {
+            let currentPage = +$pageNumber.html();
+            if (currentPage < pages) {
+                $pageNumber.html(currentPage + 1);
+                getDataFromApi();
+            }
+        });
+        $('.btn-prev').click(() => {
+            let currentPage = +$pageNumber.html();
+            if (currentPage > 1) {
+                $pageNumber.html(currentPage - 1);
+                getDataFromApi();
+            }
+        });
+        $('.page-size').change(() => {
+            getDataFromApi();
+        });
+        $('.sort-by').change(() => {
+            getDataFromApi();
+        })
+    });
+    $('.btn-open-cart').click(() => {
+        window.location.href = "http://localhost:8080/cart";
+    });
+</script>
+
+</body>
+</html>

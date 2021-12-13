@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cart</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <style>
+        .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px;
+        }
+
+        .item-img {
+            height: 150px;
+        }
+
+
+        .btn-create-order {
+            margin: 20px;
+        }
+
+        .comment {
+            width: 100%;
+        }
+
+        .date{
+            width: 450px;
+        }
+
+        .user-container {
+            width: 80%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="products"></div>
+
+<div class="sum-order"></div>
+<div class="user-container">
+    <div class="row">
+        <form class="col s12">
+            <div class="row">
+                <div class="input-field col s6">
+                    <input id="first_name" type="text" class="name-input validate">
+                    <label for="first_name">Name</label>
+                </div>
+                <div class="input-field col s6">
+                    <input id="second_name" type="text" class="surname-input validate">
+                    <label for="second_name">Surname</label>
+                </div>
+            </div>
+
+
+            <div class="row">
+                <div class="input-field col s6">
+                    <input id="address" type="text" class="address-input validate">
+                    <label for="address">Address</label>
+                </div>
+
+                <div class="row">
+                    <div class="input-field col s6">
+                        <input id="email" type="email" class="email-input validate">
+                        <label for="email">Email</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="phone-number">
+                    <div class="input-field col s6">
+                        <input id="phone" type="tel" class="phone-input validate">
+                        <label for="phone">Phone Number</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="date row">
+                <div class="date-picker input-field col s12 m3">
+                    <input id="picker" type="text" class="birthday-input datepicker">
+                    <label for="picker">Birthday</label>
+                </div>
+            </div>
+
+
+            <div class="comment row">
+                <div class="input-field col s6">
+                        <textarea id="icon_prefix2" class="comment-text materialize-textarea"
+                                  data-length="255"></textarea>
+                    <label for="icon_prefix2">Please write comment</label>
+                </div>
+            </div>
+
+
+        </form>
+    </div>
+
+</div>
+
+
+<div>
+    <button class="btn-create-order btn waves-effect waves-light">Order</button>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('.datepicker').datepicker({
+            format: "dd/mm/yyyy",
+            changeMonth: true,
+            changeYear: true,
+        });
+
+
+    });
+
+    const $productsContainer = $('.products');
+    const $nameInput = $('.name-input');
+    const $surnameInput = $('.surname-input');
+    const $emailInput = $('.email-input');
+    const $addressInput = $('.address-input');
+    const $phoneInput = $('.phone-input');
+    const $birthdayInput = $('.birthday-input');
+    const $commentText = $('.comment-text');
+
+
+    const addActionToCountDown = () => {
+        $('.btn-count-down').click((e) => {
+            const $count = $(e.target).siblings('.item-count-value').first();
+            const id = $count.attr('data-id');
+
+            let cart = JSON.parse(window.localStorage.getItem('cart'));
+
+            let count = +$count.html();
+            if (count > 1) {
+                count--;
+                $count.html(count);
+                const el = cart.filter(t => t.productId == id).shift();
+                el.count = count;
+
+            } else {
+                cart = cart.filter(t => t.productId != id);
+                $count.closest('.item').fadeOut();
+            }
+            window.localStorage.setItem('cart', JSON.stringify(cart));
+        });
+    };
+
+
+    const addActionToCountUp = () => {
+        $('.btn-count-up').click((e) => {
+            const $count = $(e.target).siblings('.item-count-value').first();
+            const id = $count.attr('data-id');
+            const balance = $count.attr('data-balance');
+            let count = +$count.html();
+            const cart = JSON.parse(window.localStorage.getItem('cart'));
+            const el = cart.filter(t => t.productId == id).shift();
+            if (count < balance) {
+                count++;
+                $count.html(count);
+                el.count = count;
+                window.localStorage.setItem('cart', JSON.stringify(cart));
+            } else {
+                alert("Неможливо придбати більше товару ніж є на складі")
+            }
+        });
+    };
+
+
+    const appendItem = (item) => {
+        $productsContainer.append(`
+                <div class="item">
+                    <img class="item-img" src="http://localhost:8080/images/product/${item.mainImage}">
+                    <div class="item-title">${item.name}</div>
+                    <div class="item-price">${item.price}</div>
+                    <div class="item-count">
+                        <button class="btn-count-down btn">-</button>
+                        <span data-id="${item.id}"data-balance="${item.balance}"  class="item-count-value">${item.count}</span>
+                        <button class="btn-count-up btn">+</button>
+                    </div>
+                </div>
+            `);
+
+    };
+    const appendItems = (items) => {
+
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+
+
+            $.ajax({
+                url: `http://localhost:8080/product/one?id=${item.productId}`,
+                type: 'get',
+                success: res => {
+                    appendItem({
+                        ...res,
+                        count: item.count
+                    });
+                    if (items.length == (i + 1)) {
+                        addActionToCountDown();
+                        addActionToCountUp();
+                    }
+                },
+                error: e => {
+                    console.log(e);
+                    alert('error');
+                }
+            })
+        }
+    };
+
+
+    // $('.btn-create-order').click(() => {
+    //     const req = {
+    //         name: $nameInput.val(),
+    //         address: $addressInput.val(),
+    //         phoneNumber: $phoneInput.val(),
+    //         email: $emailInput.val(),
+    //         birthday: $birthdayInput.val()
+    //     };
+    //     $.ajax({
+    //         url: 'http://localhost:8080/user',
+    //         type: 'post',
+    //         data: JSON.stringify(req),
+    //         contentType: 'application/json',
+    //         success: () => {
+    //             console.log("user create")
+    //
+    //         },
+    //         error: (e) => {
+    //             console.log(e);
+    //             console.log(e.responseJSON.msg);
+    //             alert('error')
+    //         }
+    //     })
+    // });
+
+
+    appendItems(JSON.parse(window.localStorage.getItem('cart')));
+    // const userRequest = {
+    //     name: $nameInput.val(),
+    //     address: $addressInput.val(),
+    //     phoneNumber: $phoneInput.val(),
+    //     email: $emailInput.val(),
+    //     birthday: $birthdayInput.val()
+    // };
+    $('.btn-create-order').click(() => {
+        const req = {
+            products: JSON.parse(window.localStorage.getItem('cart')),
+            comment: $commentText.val(),
+            userRequest: {
+                name: $nameInput.val(),
+                surname: $surnameInput.val(),
+                address: $addressInput.val(),
+                phoneNumber: $phoneInput.val(),
+                email: $emailInput.val(),
+                birthday: $birthdayInput.val()
+            }
+        };
+        $.ajax({
+            url: 'http://localhost:8080/order',
+            type: 'post',
+            data: JSON.stringify(req),
+            contentType: 'application/json',
+            success: () => {
+                window.location.href = 'http://localhost:8080/catalog';
+                window.localStorage.setItem('cart', '[]');
+
+            },
+            error: (e) => {
+                console.log(e);
+                console.log(e.responseJSON.msg);
+
+                alert('error')
+            }
+        })
+    });
+
+
+</script>
+</body>
+</html>

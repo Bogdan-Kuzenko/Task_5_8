@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Subcategory</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+
+</head>
+<style>
+
+    #subcategories img{
+        width: 30%;
+    }
+    #uploaded-images img{
+        max-width: 10%;
+        height: auto;
+    }
+
+</style>
+
+<body>
+
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Hide</th>
+        <th>Category</th>
+        <th>Image</th>
+        <th>Name</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+
+    <tbody id="subcategories"></tbody>
+
+</table>
+
+<div id="create-subcategory-modal" class="modal">
+    <div class="modal-content">
+
+        <div class="input-field">
+            <select class="category-select">
+                <option value="" disabled selected>Choose your category</option>
+            </select>
+            <label>Category</label>
+        </div>
+
+        <div>
+            <input data-id="" id="subcategory-name-input" type="text" placeholder="Name">
+        </div>
+
+        <div id="uploaded-images"></div>
+
+        <div>
+            <input class="file-select" type="file">
+        </div>
+
+        <div class="switch">
+            <label>
+                <h6>Hide category</h6>
+                Off
+                <input id="hidden" value="false" type="checkbox">
+                <span class="lever"></span>
+                On
+            </label>
+        </div>
+
+
+    </div>
+    <div class="modal-footer">
+        <button class="btn" id="subcategory-create-button">Ok</button>
+    </div>
+</div>
+
+<button id="create-subcategory-btn" data-target="create-subcategory-modal" class=" btn modal-trigger">Create
+    Subcategory
+</button>
+
+
+<script src="subcategories.js"></script>
+</body>
+</html>

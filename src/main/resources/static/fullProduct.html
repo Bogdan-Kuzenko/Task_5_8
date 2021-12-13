@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</head>
+<style>
+
+    .body-container {
+        width: 100%;
+    }
+
+    .title {
+        display: flex;
+        margin: 0 15px;
+    }
+
+    .body {
+        margin: 15px;
+        padding: 0px;
+    }
+
+    .text {
+        display: flex;
+        align-content: center;
+        width: 80%;
+    }
+
+    .btn-open-cart {
+        margin: 10px;
+    }
+
+    .btn-to-cart {
+        margin: 10px;
+    }
+
+    .add-cart {
+        margin: 5px 15px;
+    }
+
+    .image {
+        margin: 20px;
+        width: 40%;
+    }
+
+</style>
+<body>
+
+<div class="body-container">
+
+
+</div>
+<div class="cart-container">
+    <button class="btn-open-cart btn waves-effect waves-light">Корзина</button>
+</div>
+
+<script>
+
+    $.urlParam = function (name) {
+        var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+        return results[1] || 0;
+    }
+
+
+    let $container = $('.body-container');
+
+
+    const addActionOnToCartButtons = () => {
+        $('.btn-to-cart').click((e) => {
+            const cart = JSON.parse(window.localStorage.getItem('cart')) || [];
+            const item = cart.filter(t => e.target.value == t.productId);
+            if (item.length > 0) {
+                item[0].count++;
+            } else {
+                cart.push({
+                    productId: e.target.value,
+                    count: 1
+                });
+            }
+            window.localStorage.setItem('cart', JSON.stringify(cart));
+        });
+    };
+
+
+    let appendProduct = (product) => {
+        $container.append(`
+
+            <h2 class="title">${product.maker.name} ${product.name}</h2>
+            <img class="image" src="http://localhost:8080/images/product/${product.mainImage}">
+            <div class="body">
+            <p>Виробник: ${product.maker.name}</p>
+            <p>Модель: ${product.name}</p>
+            <p>Ціна: $${product.price}</p>
+            <p>Залишок: ${product.balance} шт.</p>
+            <p class="text">Опис: <br>${product.description}</p>
+            </div>
+            <button value="${product.id}" class="btn-to-cart btn waves-effect waves-light">В кошик</button>
+
+
+
+        `);
+    };
+
+    let getProduct = () => {
+        $container.html('');
+        $.ajax({
+            url: `http://localhost:8080/product/one?id=${$.urlParam('id')}`,
+            type: 'get',
+            success: (res) => {
+                appendProduct(res);
+                console.log(res);
+                addActionOnToCartButtons();
+
+            }
+        });
+    };
+
+    getProduct();
+
+    $('.btn-open-cart').click(() => {
+        window.location.href = "http://localhost:8080/cart";
+    });
+</script>
+
+</body>
+</html>

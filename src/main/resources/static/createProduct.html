@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+
+    <style>
+
+        .page-controllers {
+            margin-left: 40%;
+        }
+
+        .table-body {
+            margin: 15px;
+        }
+
+        .create-btn {
+            margin: 15px;
+        }
+
+        .select-container {
+            margin-left: 50%;
+            margin-right: 20px;
+            margin-top: -80px;
+            display: flex;
+            width: 50%;
+            align-items: start;
+            position: absolute;
+            justify-content: space-around;
+
+        }
+
+        .category-select {
+
+            width: 40%;
+            margin: 10px;
+        }
+
+        .subcategory-select {
+            width: 40%;
+            margin: 10px;
+        }
+
+        .head-container {
+            margin-left: 20px;
+            margin-right: 20px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+
+        }
+
+        .page-size-sort {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .sort-input {
+            margin-right: 15px;
+        }
+
+        .page-controllers {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 50px;
+            margin-bottom: 20px;
+        }
+
+        .page-number {
+            margin: 0 10px;
+            font-size: 20px;
+        }
+
+    </style>
+
+<body>
+
+
+<div class="head-container">
+    <div class="page-size-sort">
+
+        <div class="sort-input input-field">
+            <select class="sort-by">
+                <option value="price" selected>По ціні</option>
+                <option value="name">По імені</option>
+                <option value="maker">По виробнику</option>
+            </select>
+            <label>Sort by</label>
+        </div>
+
+
+        <div class="input-field">
+            <select class="page-size">
+                <option value="5" selected>5</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+            </select>
+            <label>Page size</label>
+        </div>
+
+    </div>
+</div>
+
+<div class="select-container">
+    <div class="input-field">
+        <select class="category-select">
+            <option value="" name="categorySelect" disabled selected>Choose your category</option>
+        </select>
+        <label>Category</label>
+    </div>
+
+    <div class="input-field">
+        <select class="subcategory-select">
+            <option value="" disabled selected>Choose your subcategory</option>
+        </select>
+        <label>Subcategory</label>
+    </div>
+</div>
+
+
+<table class="table-body">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Hide</th>
+        <th>Subcategory</th>
+        <th>Maker</th>
+        <th>Image</th>
+        <th>Name</th>
+        <th>Balance</th>
+        <th>Description</th>
+        <th>Actions</th>
+    <tbody id="createProduct">
+
+    </tbody>
+
+    </tr>
+    </thead>
+</table>
+
+
+<div class="page-controllers">
+    <button class="btn btn-prev">prev</button>
+    <span class="page-number">1</span>
+    <button class="btn btn-next">next</button>
+</div>
+
+
+<div id="create-product-modal" class="modal">
+    <div class="modal-content">
+
+        <div class="input-field">
+            <select class="category-select">
+                <option value="" name="category" onchange="javascript:loadSubcategory();" disabled selected>Choose your
+                    category
+                </option>
+            </select>
+            <label>Category</label>
+        </div>
+        <div class="input-field">
+            <select class="subcategory-select">
+                <option value="" name="subcategory" onchange="javascript:" disabled selected>Choose your subcategory
+                </option>
+            </select>
+            <label>Subcategory</label>
+        </div>
+        <div class="input-field">
+            <select class="maker-select">
+                <option value="" disabled selected>Choose your maker</option>
+            </select>
+            <label>Maker</label>
+        </div>
+
+        <div>
+            <input data-id="" id="product-name-input" type="text" placeholder="Name">
+        </div>
+        <div>
+            <input id="product-balance-input" type="text" placeholder="Balance">
+        </div>
+        <div>
+            <input id="product-description-input" type="text" placeholder="Description">
+        </div>
+
+        <div id="uploaded-images">
+            <div>
+                <input class="file-select" type="file">
+            </div>
+        </div>
+
+
+        <div class="switch">
+            <label>
+                <h6>Show category</h6>
+                Off
+                <input id="hidden" value="false" type="checkbox">
+                <span class="lever"></span>
+                On
+            </label>
+        </div>
+
+
+    </div>
+    <div class="modal-footer">
+        <button class="btn" id="product-create-button">Ok</button>
+    </div>
+</div>
+
+
+<button id="create-product-btn" data-target="create-subcategory-modal" class="create-btn btn modal-trigger">Create
+    Product
+</button>
+
+
+<script>
+
+    $(document).ready(function () {
+        const $modal = $('#create-product-modal');
+        const host = 'http://localhost:8080';
+        const $productNameInput = $('#product-name-input');
+        const $productDescriptionInput = $('#product-description-input');
+        const $productBalanceInput = $('#product-balance-input');
+        const $categorySelect = $('.category-select');
+        const $subcategorySelect = $('.subcategory-select');
+        const $makerSelect = $('.maker-select');
+        const $container = $('.createProduct');
+
+        $modal.modal();
+        //
+        //     /*
+        //             ----------------Create---------------
+        // */
+        //     $('#create-product-btn').click(() => {
+        //         getProductToSelect();
+        //     });
+        //
+        //     $('#product-create-button').click(() => {
+        //
+        //         if ($productNameInput.val().length < 3) {
+        //             alert('Min length 3 symbol')
+        //             return;
+        //         }
+        //         const productRequest = {
+        //             name: $productNameInput.val(),
+        //             availableProduct: $availableProduct.is(':checked'),
+        //             subcategoryId: $subcategorySelect.val(),
+        //             makerId: $makerSelect.val(),
+        //             balance: $productBalanceInput.val(),
+        //             description: $productDescriptionInput.val(),
+        //             image: data
+        //         };
+        //
+        //         let id = $productNameInput.attr('data-id');
+        //
+        //         getBase64FromFile($fileSelect[0].files[0]).then(data => subcategoryRequest.image = data)  //if image exist -> set it
+        //             .catch(() => subcategoryRequest.image = null) // if no image - set image to null
+        //             .finally(() => { //send request after then or catch
+        //
+        //
+        //                 if (id) {
+        //                     $.ajax({
+        //                         url: `${host}/product?id=${id}`,
+        //                         type: 'put',
+        //                         contentType: 'application/json',
+        //                         data: JSON.stringify(productRequest),
+        //                         success: () => {
+        //                             getProduct();
+        //                         },
+        //                         error: logError
+        //
+        //                     });
+        //
+        //
+        //                 } else {
+        //                     $.ajax({
+        //                         url: `${host}/subcategory`,
+        //                         type: 'post',
+        //                         contentType: 'application/json',
+        //                         data: JSON.stringify(subcategoryRequest),
+        //                         success: () => {
+        //                             getSubcategories();
+        //                         },
+        //                         error: logError
+        //                     });
+        //                 }
+        //
+        //                 $modal.modal('close');
+        //                 $subcategoryNameInput.val('');
+        //                 $subcategoryNameInput.attr('data-id', '');
+        //                 $subcategoryHide.prop('checked', false);
+        //                 $categorySelect.prop('selectedIndex', 0);
+        //                 $fileSelect.val("");
+        //
+        //             });
+        //     });
+        //
+
+        // /*
+        //            ----------------Get---------------
+        //      */
+        //
+        // let tableBody = $('#createProduct');
+        //
+        // let appendProductToTable = (product) => {
+        //     tableBody.append(`
+        // <tr>
+        //
+        //
+        //     <td>${product.id}</td>
+        //     <td>${product.availableProduct}</td>
+        //     <td>${product.subcategory.name}</td>
+        //     <td>${product.maker.name}</td>
+        //     <td><img src="http://localhost:8080/images/product/${product.image}"></td>
+        //     <td>${product.name}</td>
+        //     <td>${product.balance}</td>
+        //     <td>${product.description}</td>
+        //     <td>
+        //           <button data-id="${product.id}" class="delete-btn btn">Delete</button>
+        //           <button data-id="${product.id}" class="update-btn btn">Update</button>
+        //     </td>
+        //
+        //
+        //
+        //
+        //  </tr>
+        //     `);
+        // };
+        // let appendProducts = (products) => {
+        //     $container.html('');
+        //     for (const product of products) {
+        //         appendProductToTable(product);
+        //     }
+        // };
+        //
+        // // let getProduct = () => {
+        // //     tableBody.html('');
+        // //     $.ajax({
+        // //         url: `${host}/product/page`,
+        // //         type: 'get',
+        // //         success: (response) => {
+        // //             for (let product of response) {
+        // //                 appendProductToTable(product);
+        // //             }
+        // //             actionOnDeleteButtons();
+        // //             actionOnUpdateButton();
+        // //         }
+        // //     });
+        // // };
+        // let pages = 0;
+        // let getProduct = () => {
+        //     $.ajax({
+        //         url: `http://localhost:8080/product/page?subcategoryId=4$page=1&size=5&field=name&direction=ASC`,
+        //         type: 'post',
+        //         success: (res) => {
+        //             console.log(res);
+        //             pages = res.totalPages;
+        //             if (+$pageNumber.html() === pages) {
+        //                 $('.btn-next').attr('disabled', 'true');
+        //             } else {
+        //                 $('.btn-next').removeAttr('disabled');
+        //             }
+        //             appendProducts(res.content);
+        //         }
+        //     })
+        // };
+        //
+
+        //     $('select').formSelect();
+        //     getProduct();
+        //     $('.btn-next').click(() => {
+        //         let currentPage = +$pageNumber.html();
+        //         if (currentPage < pages) {
+        //             $pageNumber.html(currentPage + 1);
+        //             getProduct();
+        //         }
+        //     });
+        //     $('.btn-prev').click(() => {
+        //         let currentPage = +$pageNumber.html();
+        //         if (currentPage > 1) {
+        //             $pageNumber.html(currentPage - 1);
+        //             getProduct();
+        //         }
+        //     });
+        //     $('.page-size').change(() => {
+        //         getProduct();
+        //     });
+        //     $('.sort-by').change(() => {
+        //         getProduct();
+        //     })
+        // });
+
+
+        //
+
+        /*
+  ------------------------------ category--------------------------------
+   */
+
+
+        const appendCategoryToSelect = (category) => {
+            $categorySelect.append(`<option value="${category.id}">${category.name}</option>`);
+        };
+
+        const appendCategoriesToSelect = (categories) => {
+            for (const category of categories) {
+                appendCategoryToSelect(category)
+            }
+        };
+
+        const activateSelect = (categories) => {
+            appendCategoriesToSelect(categories);
+            $('select').formSelect();
+        };
+
+        let getCategoriesToSelect = () => {
+            $.ajax({
+                url: `http://localhost:8080/category`,
+                type: 'get',
+                success: activateSelect,
+                error: logError
+            });
+        };
+
+
+        /*
+        ------------------------------ subcategory--------------------------------
+         */
+
+        const appendSubcategoryToSelect = (subcategory) => {
+            $subcategorySelect.append(`
+        <option disabled selected>Choose your subcategory</option>
+        <option value="${subcategory.id}">${subcategory.name}</option>`);
+        };
+
+        const appendSubcategoriesToSelect = (subcategories) => {
+            for (const subcategory of subcategories) {
+                appendSubcategoryToSelect(subcategory)
+            }
+        };
+
+        const activateSelectSubcategory = (subcategories) => {
+            appendSubcategoriesToSelect(subcategories);
+            $('select').formSelect();
+        };
+
+        let getSubcategoriesToSelect = () => {
+
+            $('select').on('change', function () {
+
+                let categoryId = (this.value);
+                $.ajax({
+                    url: `http://localhost:8080/subcategory/byCategory?categoryId=${categoryId}`,
+                    type: 'get',
+                    success: activateSelectSubcategory,
+                    error: logError
+                });
+                $subcategorySelect.html('');
+            });
+        };
+
+
+        /*
+            --------------------------file----------------------------------
+    */
+        const getBase64FromFile = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        };
+
+
+        function addImgToContainer(fileName) {
+            let img = document.createElement('img');
+            img.setAttribute('src', '/images/subcategory' + fileName);
+            document.getElementById('uploaded-images').appendChild(img);
+            console.log(img.setAttribute('src', '/images/subcategory' + fileName))
+        }
+
+        function logError(err) {
+            console.log(err)
+        }
+
+
+        getCategoriesToSelect();
+        getSubcategoriesToSelect();
+
+    })
+</script>
+</body>
+</html>
